@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>a question...</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+
+  /* ======================================================
+     EASY EDIT ZONE #1 — COLORS
+     Change these hex codes to re-theme the whole page.
+     ====================================================== */
+  :root{
+    --bg-1: #fdf1ee;
+    --bg-2: #fbe3e0;
+    --rose: #e2576f;
+    --rose-deep: #c93f58;
+    --plum: #4a2438;
+    --gold: #d9a441;
+    --card: #fffaf8;
+    --shadow: rgba(74, 36, 56, 0.18);
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:'Quicksand', sans-serif;
+    background: radial-gradient(circle at 20% 20%, var(--bg-2), var(--bg-1) 60%);
+    color: var(--plum);
+    overflow:hidden;
+    position:relative;
+  }
+
+  /* floating ambient hearts in the background */
+  .bg-heart{
+    position:fixed;
+    bottom:-10%;
+    font-size: 1.4rem;
+    color: var(--rose);
+    opacity:0.35;
+    animation: float 12s linear infinite;
+    pointer-events:none;
+    user-select:none;
+    z-index:0;
+  }
+  @keyframes float{
+    0%   { transform: translateY(0) rotate(0deg); opacity:0; }
+    10%  { opacity:0.35; }
+    90%  { opacity:0.35; }
+    100% { transform: translateY(-110vh) rotate(25deg); opacity:0; }
+  }
+
+  .screen{
+    position:relative;
+    z-index:1;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding: 2rem 1.25rem;
+    text-align:center;
+  }
+  .screen.active{ display:flex; }
+
+  .eyebrow{
+    letter-spacing:0.3em;
+    text-transform:uppercase;
+    font-size:0.7rem;
+    color: var(--gold);
+    font-weight:700;
+    margin-bottom:0.75rem;
+  }
+
+  h1{
+    font-family:'Playfair Display', serif;
+    font-style:italic;
+    font-weight:600;
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    margin: 0 0 1.5rem 0;
+    max-width: 20ch;
+    line-height:1.25;
+  }
+
+  /* ======================================================
+     EASY EDIT ZONE #2 — PHOTO FRAME
+     Swap the image sources in the CONFIG object near the
+     bottom of the <script> tag, not here.
+
+     To change the frame SHAPE, edit --frame-radius below:
+       50%   = circle (only looks right on a square photo)
+       999px = pill / fully rounded corners
+       24px  = softly rounded corners (current default)
+       0px   = sharp square corners
+     ====================================================== */
+  :root{
+    --frame-radius: 24px;
+  }
+  .frame{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    max-width: min(360px, 85vw);
+    max-height: min(360px, 60vh);
+    min-width: 180px;
+    min-height: 180px;
+    border-radius: var(--frame-radius);
+    border: 6px solid var(--card);
+    box-shadow: 0 12px 30px var(--shadow);
+    overflow:hidden;
+    margin-bottom: 1.75rem;
+    background: linear-gradient(135deg, var(--bg-2), var(--rose));
+  }
+  .frame img{
+    display:block;
+    width:auto;
+    height:auto;
+    max-width:100%;
+    max-height:100%;
+    object-fit: contain;
+  }
+  .frame .placeholder{
+    color: var(--card);
+    font-family:'Playfair Display', serif;
+    font-style:italic;
+    font-size:0.95rem;
+    padding: 1rem;
+  }
+
+  /* the button chase area */
+  .btn-row{
+    position:relative;
+    display:flex;
+    gap:1.25rem;
+    align-items:center;
+    justify-content:center;
+    min-height: 90px;
+    width:min(500px, 90vw);
+  }
+
+  button{
+    font-family:'Quicksand', sans-serif;
+    font-weight:700;
+    border:none;
+    border-radius: 999px;
+    cursor:pointer;
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s ease;
+  }
+
+  .yes-btn{
+    background: var(--rose);
+    color: #fff;
+    padding: 0.9rem 2rem;
+    font-size: 1.05rem;
+    box-shadow: 0 8px 20px var(--shadow);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  .yes-btn:hover{ background: var(--rose-deep); }
+  @keyframes pulse{
+    0%,100%{ transform: scale(1); }
+    50%{ transform: scale(1.06); }
+  }
+
+  .no-btn{
+    background: var(--plum);
+    color: #fff;
+    border: 2px solid var(--plum);
+    padding: 0.9rem 1.6rem;
+    font-size: 1rem;
+    position: relative;
+    white-space: nowrap;
+    transition: font-size 0.5s ease, padding 0.5s ease, border-width 0.5s ease,
+                opacity 0.5s ease, margin 0.5s ease, left 0.45s ease, top 0.45s ease,
+                background 0.2s ease;
+  }
+  .no-btn:hover{ background: var(--rose-deep); border-color: var(--rose-deep); }
+
+  .yes-btn{
+    z-index: 20;
+  }
+
+  /* on stage 2 the no button gets little arrows pointing at yes */
+  .hint-arrow{
+    position:absolute;
+    font-size:1.4rem;
+    color: var(--gold);
+    animation: point 1s ease-in-out infinite;
+    pointer-events:none;
+  }
+  @keyframes point{
+    0%,100%{ transform: translateX(0); opacity:0.6; }
+    50%{ transform: translateX(6px); opacity:1; }
+  }
+
+  .footnote{
+    margin-top:1.5rem;
+    font-size:0.85rem;
+    color: var(--plum);
+    opacity:0.55;
+  }
+
+  /* final screen confetti hearts */
+  .burst{
+    position:fixed;
+    top:50%; left:50%;
+    font-size:1.6rem;
+    color: var(--rose);
+    animation: burst 1.4s ease-out forwards;
+    pointer-events:none;
+    z-index:5;
+  }
+  @keyframes burst{
+    to{
+      transform: translate(var(--dx), var(--dy)) scale(0.4) rotate(180deg);
+      opacity:0;
+    }
+  }
+
+</style>
+</head>
+<body>
+
+<!-- ambient floating hearts, purely decorative -->
+<div id="bgHearts"></div>
+
+<!-- ================= SCREEN 1 ================= -->
+<section class="screen active" id="screen1">
+  <div class="eyebrow">to whoever is reading this</div>
+
+  <!-- ======================================================
+       EASY EDIT ZONE #3 — TEXT
+       All wording lives in the CONFIG object in the <script>
+       at the bottom. Look for config.screen1Text, etc.
+       ====================================================== -->
+  <h1 id="s1-text">hey, I have a question...</h1>
+
+  <div class="frame" id="s1-frame">
+    <span class="placeholder" id="s1-placeholder">add a photo:<br>edit config.image1 in the script</span>
+    <img id="s1-img" style="display:none;">
+  </div>
+
+  <div class="btn-row" id="s1-buttons">
+    <button class="yes-btn" id="s1-yes">yes?</button>
+    <button class="no-btn" id="s1-no">no, go away</button>
+  </div>
+
+  <div class="footnote">go ahead, try clicking no. see what happens.</div>
+</section>
+
+<!-- ================= SCREEN 2 ================= -->
+<section class="screen" id="screen2">
+  <div class="eyebrow">okay okay, real question now</div>
+
+  <h1 id="s2-text">will you be my girlfriend?</h1>
+
+  <div class="frame" id="s2-frame">
+    <span class="placeholder" id="s2-placeholder">add a photo:<br>edit config.image2 in the script</span>
+    <img id="s2-img" style="display:none;">
+  </div>
+
+  <div class="btn-row" id="s2-buttons">
+    <button class="yes-btn" id="s2-yes">yes!</button>
+    <button class="no-btn" id="s2-no">no</button>
+  </div>
+</section>
+
+<!-- ================= SCREEN 3 (final) ================= -->
+<section class="screen" id="screen3">
+  <div class="eyebrow" id="s3-eyebrow">✓</div>
+  <h1 id="s3-text">yay! best answer ever :)</h1>
+
+  <div class="frame" id="s3-frame">
+    <span class="placeholder" id="s3-placeholder">add a photo:<br>edit config.image3 in the script</span>
+    <img id="s3-img" style="display:none;">
+  </div>
+</section>
+
+<script>
+/* ============================================================
+   EASY EDIT ZONE — MAIN CONFIG
+   Change any of the text or image paths below. Nothing else
+   in this file needs to be touched for basic customization.
+
+   For images: put your photo files in the SAME FOLDER as this
+   html file, then set e.g.  image1: "photo1.jpg"
+   You can also use a full web link like "https://example.com/pic.jpg"
+   If left as "", a placeholder circle is shown instead.
+============================================================ */
+const config = {
+  // ----- screen 1 -----
+  screen1Text: "hey, I have a question...",
+  image1: "image1.jpg",
+
+  // ----- screen 2 -----
+  screen2Text: "will you be my girlfriend?",
+  image2: "image2.jpg",
+
+  // phrases the "no" button cycles through on screen 2,
+  // in order, each time it's clicked
+  noPhrases: [
+    "no",
+    "are you sure?",
+    "really sure?",
+    "you should reconsider...",
+    "think about it a little more",
+    "last chance!",
+    "surely not??",
+    "hmm, are you positive?"
+  ],
+
+  // ----- screen 3 (after they say yes) -----
+  screen3Text: "yay! best answer ever :)",
+  image3: "image3.jpg",
+};
+
+/* ============================================================
+   Below this line is the logic that makes it work.
+   You shouldn't need to edit it, but nothing bad will happen
+   if you look around.
+============================================================ */
+
+// ---- load text + images from config ----
+document.getElementById('s1-text').textContent = config.screen1Text;
+document.getElementById('s2-text').textContent = config.screen2Text;
+document.getElementById('s3-text').textContent = config.screen3Text;
+
+function loadImage(prefix, src){
+  if(!src) return;
+  const img = document.getElementById(prefix + '-img');
+  const placeholder = document.getElementById(prefix + '-placeholder');
+  img.onload = () => {
+    img.style.display = 'block';
+    placeholder.style.display = 'none';
+  };
+  img.onerror = () => {
+    placeholder.textContent = "couldn't load that image — check the filename in config";
+  };
+  img.src = src;
+}
+loadImage('s1', config.image1);
+loadImage('s2', config.image2);
+loadImage('s3', config.image3);
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ---- ambient floating hearts ----
+const bgHeartsContainer = document.getElementById('bgHearts');
+function spawnBgHeart(){
+  const h = document.createElement('div');
+  h.className = 'bg-heart';
+  h.textContent = Math.random() > 0.5 ? '♥' : '♡';
+  h.style.left = Math.random() * 100 + 'vw';
+  h.style.animationDuration = (9 + Math.random() * 6) + 's';
+  h.style.fontSize = (1 + Math.random() * 1.2) + 'rem';
+  bgHeartsContainer.appendChild(h);
+  setTimeout(() => h.remove(), 16000);
+}
+setInterval(spawnBgHeart, 900);
+spawnBgHeart();
+
+// ---- track pointer position (mouse, pen, or touch) ----
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
+window.addEventListener('pointermove', (e) => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+});
+
+/* ======================================================
+   EASY EDIT ZONE #4 — GROW / SHRINK / CHASE TUNING
+   shrinkRate:      how much smaller "no" gets per click
+     (0.7 = loses 30% of its current size each click)
+   maxYesGrowth:    the biggest "yes" is allowed to get
+   minGap:          how close (px) "yes" lets the cursor get
+     before it stops closing the distance
+   followSpeed:     how quickly "yes" eases toward the cursor
+     each frame (0–1, lower = slower/more of an "inch along")
+   startAfterClicks: how many times "no" must be clicked
+     before "yes" starts chasing at all
+   ====================================================== */
+const s1Tuning = { shrinkRate: 0.72, maxYesGrowth: 3.4, growth: 1, minGap: 45, followSpeed: 0.02, startAfterClicks: 3 };
+const s2Tuning = { shrinkRate: 0.78, maxYesGrowth: 2.4, growth: 1, minGap: 40, followSpeed: 0.02, startAfterClicks: 3 };
+
+// makes a "yes" button slowly ease toward the pointer, stopping
+// `minGap` pixels short of it, and steering clear of its paired
+// "no" button (set via tuning.avoidEl) so the two never overlap
+function createChaser(button, tuning){
+  let cx, cy, rafId = null, active = false;
+
+  function frame(){
+    if(!active) return;
+    const dx = mouseX - cx;
+    const dy = mouseY - cy;
+    const dist = Math.hypot(dx, dy) || 1;
+    const targetX = mouseX - (dx / dist) * tuning.minGap;
+    const targetY = mouseY - (dy / dist) * tuning.minGap;
+    cx += (targetX - cx) * tuning.followSpeed;
+    cy += (targetY - cy) * tuning.followSpeed;
+
+    const margin = 70;
+    cx = Math.min(Math.max(cx, margin), window.innerWidth - margin);
+    cy = Math.min(Math.max(cy, margin), window.innerHeight - margin);
+
+    // steer clear of the "no" button so they never overlap
+    const avoidEl = tuning.avoidEl;
+    if(avoidEl && avoidEl.style.display !== 'none'){
+      const aRect = avoidEl.getBoundingClientRect();
+      if(aRect.width > 0){
+        const acx = aRect.left + aRect.width / 2;
+        const acy = aRect.top + aRect.height / 2;
+        const adx = cx - acx, ady = cy - acy;
+        const adist = Math.hypot(adx, ady) || 1;
+        const minSep = Math.max(aRect.width, aRect.height) / 2 + 90;
+        if(adist < minSep){
+          const push = minSep - adist;
+          cx += (adx / adist) * push;
+          cy += (ady / adist) * push;
+        }
+      }
+    }
+
+    button.style.left = cx + 'px';
+    button.style.top = cy + 'px';
+    button.style.transform = `translate(-50%, -50%) scale(${tuning.growth})`;
+    rafId = requestAnimationFrame(frame);
+  }
+
+  return {
+    start(){
+      if(active) return;
+      const rect = button.getBoundingClientRect();
+      cx = rect.left + rect.width / 2;
+      cy = rect.top + rect.height / 2;
+      button.style.position = 'fixed';
+      button.style.margin = '0';
+      button.style.left = cx + 'px';
+      button.style.top = cy + 'px';
+      button.style.transform = `translate(-50%, -50%) scale(${tuning.growth})`;
+      active = true;
+      frame();
+    },
+    stop(){
+      active = false;
+      if(rafId) cancelAnimationFrame(rafId);
+    }
+  };
+}
+
+// makes a "no" button jump to a random spot on screen
+function dodge(button){
+  const rect = button.getBoundingClientRect();
+  if(button.style.position !== 'fixed'){
+    button.style.position = 'fixed';
+    button.style.margin = '0';
+    button.style.left = rect.left + 'px';
+    button.style.top = rect.top + 'px';
+    void button.offsetWidth; // force reflow so the jump below animates
+  }
+  const margin = 24;
+  const w = Math.max(rect.width, 40);
+  const h = Math.max(rect.height, 30);
+  const maxLeft = Math.max(window.innerWidth - w - margin, margin);
+  const maxTop = Math.max(window.innerHeight - h - margin, margin);
+  button.style.left = (margin + Math.random() * (maxLeft - margin)) + 'px';
+  button.style.top  = (margin + Math.random() * (maxTop - margin)) + 'px';
+}
+
+// ---- SCREEN 1 ----
+const s1Yes = document.getElementById('s1-yes');
+const s1No  = document.getElementById('s1-no');
+let s1Factor = 1; // current size multiplier of the "no" button
+let s1Clicks = 0;
+const s1Chaser = createChaser(s1Yes, s1Tuning);
+s1Tuning.avoidEl = s1No;
+
+s1No.addEventListener('click', () => {
+  s1Clicks++;
+
+  // shrink the no button for real (font-size + padding + border)
+  s1Factor *= s1Tuning.shrinkRate;
+  s1No.style.fontSize    = (1 * s1Factor) + 'rem';
+  s1No.style.padding     = (0.9 * s1Factor) + 'rem ' + (1.6 * s1Factor) + 'rem';
+  s1No.style.borderWidth = (2 * s1Factor) + 'px';
+  s1No.style.opacity     = s1Factor;
+
+  if(s1Factor < 0.05){
+    s1No.style.display = 'none'; // fully gone, can't be seen or clicked
+  } else {
+    dodge(s1No); // jump to a new random spot
+  }
+
+  // yes button keeps growing, up to the cap
+  s1Tuning.growth = Math.min(s1Tuning.growth + 0.3, s1Tuning.maxYesGrowth);
+
+  if(s1Clicks < s1Tuning.startAfterClicks){
+    s1Yes.style.transform = `scale(${s1Tuning.growth})`; // just grows in place
+  } else {
+    s1Chaser.start(); // begins the slow chase (safe to call repeatedly)
+  }
+});
+
+s1Yes.addEventListener('click', () => {
+  s1Chaser.stop();
+  showScreen('screen2');
+});
+
+// ---- SCREEN 2 ----
+const s2Yes = document.getElementById('s2-yes');
+const s2No  = document.getElementById('s2-no');
+let s2Clicks = 0;
+let s2Factor = 1;
+const s2Chaser = createChaser(s2Yes, s2Tuning);
+s2Tuning.avoidEl = s2No;
+
+s2No.addEventListener('click', () => {
+  s2Clicks++;
+  const phrases = config.noPhrases;
+  s2No.textContent = phrases[Math.min(s2Clicks, phrases.length - 1)];
+
+  // shrink the no button for real, same as screen 1
+  s2Factor *= s2Tuning.shrinkRate;
+  s2No.style.fontSize    = (1 * s2Factor) + 'rem';
+  s2No.style.padding     = (0.9 * s2Factor) + 'rem ' + (1.6 * s2Factor) + 'rem';
+  s2No.style.borderWidth = (2 * s2Factor) + 'px';
+  s2No.style.opacity     = s2Factor;
+
+  if(s2Factor < 0.05){
+    s2No.style.display = 'none';
+  } else {
+    dodge(s2No); // jump to a new random spot
+    // add a pointing arrow toward the yes button (replace any previous one)
+    s2Yes.querySelectorAll('.hint-arrow').forEach(a => a.remove());
+    const arrow = document.createElement('span');
+    arrow.className = 'hint-arrow';
+    arrow.textContent = '→';
+    arrow.style.left = (-30 - Math.random() * 20) + 'px';
+    arrow.style.top = (Math.random() * 40 - 20) + 'px';
+    s2Yes.appendChild(arrow);
+  }
+
+  // yes button grows, up to the cap
+  s2Tuning.growth = Math.min(s2Tuning.growth + 0.2, s2Tuning.maxYesGrowth);
+
+  if(s2Clicks < s2Tuning.startAfterClicks){
+    s2Yes.style.transform = `scale(${s2Tuning.growth})`; // just grows in place
+  } else {
+    s2Chaser.start(); // begins the slow chase (safe to call repeatedly)
+  }
+});
+
+s2Yes.addEventListener('click', () => {
+  s2Chaser.stop();
+  showScreen('screen3');
+  launchConfetti();
+});
+
+// ---- SCREEN 3: little heart confetti burst ----
+function launchConfetti(){
+  for(let i = 0; i < 24; i++){
+    const heart = document.createElement('div');
+    heart.className = 'burst';
+    heart.textContent = '♥';
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 150 + Math.random() * 250;
+    heart.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+    heart.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+    heart.style.color = Math.random() > 0.5 ? 'var(--rose)' : 'var(--gold)';
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 1500);
+  }
+}
+</script>
+</body>
+</html>
